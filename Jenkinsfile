@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     environment {
-        REGISTRY = "localhost:5000"
         APP_NAME = "sample-flask-app"
     }
 
@@ -22,22 +21,14 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    dockerImage = docker.build("${REGISTRY}/${APP_NAME}")
-                }
-            }
-        }
-        stage('Push to Local Registry') {
-            steps {
-                script {
-                    docker.withRegistry("http://${REGISTRY}", '') {
-                        dockerImage.push('latest')
-                    }
+                    dockerImage = docker.build("${APP_NAME}")
                 }
             }
         }
         stage('Deploy Application') {
             steps {
-                sh 'kubectl set image deployment/flask-app flask-app=localhost:5000/sample-flask-app:latest'
+                // Assuming you have a Kubernetes deployment setup already
+                sh 'kubectl set image deployment/flask-app flask-app=${APP_NAME}'
             }
         }
     }
