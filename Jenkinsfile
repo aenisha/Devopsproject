@@ -4,13 +4,21 @@ pipeline {
         scannerHome = tool 'sonar6.1' // Adjust based on your SonarQube version
     }
     stages {
+        stage('Prepare Environment') {
+            steps {
+                echo 'Setting up Python environment...'
+                sh 'python3 --version || sudo apt-get install -y python3' // Ensuring Python3 is installed
+                sh 'pip3 --version || sudo apt-get install -y python3-pip' // Ensuring pip3 is installed
+                sh 'pip3 install --user pytest flake8' // Install pytest, flake8, and other dependencies
+                sh 'pip3 install -r requirements.txt' // Install Flask app dependencies
+            }
+        }
         stage('Build') {
             when {
                 branch 'main' // Build only on 'main' branch
             }
             steps {
                 echo 'Building Flask App'
-                sh 'pip install -r requirements.txt' // Install Flask dependencies
             }
             post {
                 success {
@@ -34,11 +42,6 @@ pipeline {
         stage('Sonar Analysis') {
             steps {
                 withSonarQubeEnv('sonar6.1') { // Ensure 'sonar6.1' matches your SonarQube server config
-                    sh '''if [ -x /opt/sonar-scanner/bin/sonar-scanner ]; then 
-                            echo "SonarScanner found"; 
-                         else 
-                            echo "SonarScanner not found"; 
-                         fi'''
                     sh '''/opt/sonar-scanner/bin/sonar-scanner \
                         -Dsonar.projectKey=flask-app \
                         -Dsonar.projectName=flask-app \
